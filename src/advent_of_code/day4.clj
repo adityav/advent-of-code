@@ -13,7 +13,10 @@
        (map (juxt identity md5))
        (filter #(.startsWith (second %) "00000"))
        (first)
+       (first)
+       (#(subs % (count prefix)))
+       (Integer/parseInt)
        ))
 
 (deftest ans1
-  (is (= 609043 (min-int-suffix "abcde"))))
+  (is (= 609043 (min-int-suffix "abcdef"))))
