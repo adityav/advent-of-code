@@ -43,6 +43,14 @@
   [bulb-map coord f]
   (update-in bulb-map coord f))
 
+(defn update-bulb-trans
+  [bulb-map [x y] f]
+  (let [y-vec (get bulb-map x)
+        xy-val (get y-vec y)
+        new-val (f xy-val)]
+    (assoc! bulb-map x (assoc! y-vec y new-val)))
+  )
+
 ;; applies the f val and update the map with the results.
 (defn for-each-bulb
   [bulb-map from to f]
@@ -70,6 +78,16 @@
   [f]
   (fn [a-cmd] (update a-cmd :main-cmd f)))
 
+;; apparently clojure can't generate transient collections for unboxed vectors
+(defn gen-transient-grid
+  [cell-type]
+  (vec (repeat 1000 (reduce conj (vector-of cell-type) (repeat 1000 nil))))
+  ;; (transient (vec (repeat 1000 (reduce conj! (transient []) (repeat 1000 nil)))))
+  )
+
+;; using a dic takes 18500 msec
+;; using the above transient grid takes 3000 msec
+;; using the boolean vector of vectors takes 14000 msec
 (defn solve1
   []
   (num-lit-lights (with-open [rdr (clojure.java.io/reader "resources/day6-input.txt")]
@@ -77,7 +95,8 @@
                          (map str->cmd)
                          (map (resolve-actions cmd->action1))
                          (reduce (fn [bulb-map {:keys [main-cmd to from]}]
-                                   (for-each-bulb bulb-map from to main-cmd)) {}))
+                                   ;; (for-each-bulb bulb-map from to main-cmd)) {}))
+                                   (for-each-bulb bulb-map from to main-cmd)) (gen-transient-grid :boolean)))
                     )))
 (defn solve2
   []
@@ -87,6 +106,6 @@
           (map str->cmd)
           (map (resolve-actions cmd->action2))
           (reduce (fn [bulb-map {:keys [main-cmd to from]}]
-                    (for-each-bulb bulb-map from to main-cmd)) {})
+                    (for-each-bulb bulb-map from to main-cmd)) (gen-transient-grid :int))
           )))
   )
